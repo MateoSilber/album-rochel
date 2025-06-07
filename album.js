@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const mejanNombres = ["Igal", "IaraN"];
   const leyendasNombres = ["Puachi", "Mile", "Chiara", "Adri", "Cande", "Maia", "Guido", "ThiagoR"];
 
-  // Cambié aquí: fotos de grupo con nombres compatibles con archivos locales
+  // Fotos de grupo con nombres compatibles con archivos locales
   const grupoFotosNombres = ["FotoGrupo1", "FotoGrupo2", "FotoGrupo3", "FotoGrupo4", "FotoGrupo5"];
 
   const totalFiguritas = [];
@@ -131,17 +131,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (cooldown) return;
     cooldown = true;
     abrirBtn.disabled = true;
+    abrirBtn.textContent = "Abriendo...";
 
     const nuevas = [];
-    const disponibles = totalFiguritas.filter(f => !coleccion.includes(f.id));
-
-    while (nuevas.length < 5 && disponibles.length > 0) {
-      const randIndex = Math.floor(Math.random() * disponibles.length);
-      nuevas.push(disponibles[randIndex]);
-      disponibles.splice(randIndex, 1);
-    }
-
-    while (nuevas.length < 5) {
+    // Elegimos 5 figuritas al azar, sin importar repetidas ni si ya las tienes
+    for (let i = 0; i < 5; i++) {
       const rand = totalFiguritas[Math.floor(Math.random() * totalFiguritas.length)];
       nuevas.push(rand);
     }
@@ -178,7 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function iniciarCooldown() {
-    let tiempo = 20;
+    let tiempo = 60; // 60 segundos = 1 minuto
     timerDiv.style.display = "block";
     imgSobreBloqueado.style.display = "inline-block";
     timerDiv.textContent = `Siguiente sobre en ${tiempo}s`;
@@ -189,6 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (tiempo <= 0) {
         clearInterval(intervalo);
         abrirBtn.disabled = false;
+        abrirBtn.textContent = "Abrir Sobre";
         cooldown = false;
         timerDiv.style.display = "none";
         imgSobreBloqueado.style.display = "none";

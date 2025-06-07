@@ -1,4 +1,4 @@
-body {
+body { 
   font-family: Arial, sans-serif;
   background: linear-gradient(to right, violet, red);
   color: #fff;
@@ -109,4 +109,48 @@ button {
 #timer {
   font-size: 18px;
   margin-bottom: 10px;
+}
+
+/* Responsive para celulares */
+@media (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+
+  button {
+    width: 100%;
+    font-size: 18px;
+    padding: 15px 0;
+    border-radius: 8px;
+  }
+
+  #sobre-abierto {
+    gap: 5px;
+  }
+
+  .figurita {
+    width: 100px;
+    padding: 8px;
+  }
+
+  .figurita img {
+    width: 70px;
+    height: 70px;
+  }
+
+  .figurita .tipo {
+    font-size: 10px;
+  }
+
+  .figurita .numero {
+    font-size: 14px;
+  }
+
+  #album {
+    gap: 20px;
+  }
+
+  .categoria {
+    max-width: 100%;
+  }
 }
