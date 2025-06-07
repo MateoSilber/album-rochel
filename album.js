@@ -44,7 +44,7 @@ const leyendasNombres = [
 
   let coleccion = JSON.parse(localStorage.getItem("coleccionRochel")) || [];
   let cooldown = false;
-  const COOLDOWN_SEGUNDOS = 60;
+  const COOLDOWN_SEGUNDOS = 30;
 
   function obtenerRutaImagen(nombreBase) {
     return `fotos/${nombreBase}.png`; // Siempre .png para arrancar
