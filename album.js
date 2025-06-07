@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const leyendasNombres = ["Puachi", "Mile", "Chiara", "Adri", "Cande", "Maia", "Guido", "ThiagoR"];
   const grupoFotosNombres = ["FotoGrupo1", "FotoGrupo2", "FotoGrupo3", "FotoGrupo4", "FotoGrupo5"];
 
-  const totalFiguritas = [];
+ const totalFiguritas = [];
   let idCounter = 1;
 
   function crearFiguritas(nombres, tipo) {
@@ -27,7 +27,20 @@ document.addEventListener("DOMContentLoaded", () => {
   crearFiguritas(leyendasNombres, "leyenda");
   crearFiguritas(grupoFotosNombres, "foto");
 
+  const albumDiv = document.getElementById("album");
+  const sobreDiv = document.getElementById("sobre-abierto");
+  const abrirBtn = document.getElementById("abrir-sobre");
+  const timerDiv = document.getElementById("timer");
+  const sobreImg = document.getElementById("sobre-img");
+  const zoomView = document.getElementById("zoom-view");
+  const zoomImg = document.getElementById("zoom-img");
+  const zoomNombre = document.getElementById("zoom-nombre");
+  const cerrarZoom = document.getElementById("cerrar-zoom");
+
+  let coleccion = JSON.parse(localStorage.getItem("coleccionRochel")) || [];
   let imagenesDisponibles = [];
+  let cooldown = false;
+  const COOLDOWN_SEGUNDOS = 60;
 
   function precargarImagenes() {
     const nombres = totalFiguritas.map(f => f.nombre.replace(/\s|\./g, ''));
@@ -54,25 +67,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return 'fotos/fallback.png';
   }
 
-  precargarImagenes();
-
-  const albumDiv = document.getElementById("album");
-  const sobreDiv = document.getElementById("sobre-abierto");
-  const abrirBtn = document.getElementById("abrir-sobre");
-  const timerDiv = document.getElementById("timer");
-  const sobreImg = document.getElementById("sobre-img");
-  const zoomView = document.getElementById("zoom-view");
-  const zoomImg = document.getElementById("zoom-img");
-  const zoomNombre = document.getElementById("zoom-nombre");
-  const cerrarZoom = document.getElementById("cerrar-zoom");
-
-  let coleccion = JSON.parse(localStorage.getItem("coleccionRochel")) || [];
-  let cooldown = false;
-
   function renderAlbum() {
     albumDiv.innerHTML = "";
     const categorias = ["janij", "madrij", "mejan", "leyenda", "foto"];
-
     categorias.forEach(cat => {
       const subtitulo = document.createElement("h3");
       subtitulo.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
@@ -122,6 +119,10 @@ document.addEventListener("DOMContentLoaded", () => {
     cooldown = true;
     abrirBtn.disabled = true;
 
+    // Guardar tiempo en localStorage
+    const ahora = Date.now();
+    localStorage.setItem("ultimoSobre", ahora);
+
     sobreImg.src = "fotos/sobre-abierto.png";
 
     setTimeout(() => {
@@ -161,18 +162,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
       localStorage.setItem("coleccionRochel", JSON.stringify(coleccion));
       renderAlbum();
-      iniciarCooldown();
+      iniciarCooldown(); // sigue el cooldown después de abrir
     }, 2000);
   }
 
   function iniciarCooldown() {
-    let tiempo = 60;
-    timerDiv.textContent = `Siguiente sobre en ${tiempo}s`;
+    const ahora = Date.now();
+    const ultimo = localStorage.getItem("ultimoSobre");
+    let tiempoRestante = COOLDOWN_SEGUNDOS;
+
+    if (ultimo) {
+      const segundosPasados = Math.floor((ahora - parseInt(ultimo)) / 1000);
+      if (segundosPasados < COOLDOWN_SEGUNDOS) {
+        tiempoRestante = COOLDOWN_SEGUNDOS - segundosPasados;
+      } else {
+        cooldown = false;
+        abrirBtn.disabled = false;
+        timerDiv.textContent = "";
+        return;
+      }
+    }
+
+    abrirBtn.disabled = true;
+    cooldown = true;
+
+    timerDiv.textContent = `Siguiente sobre en ${tiempoRestante}s`;
 
     const intervalo = setInterval(() => {
-      tiempo--;
-      timerDiv.textContent = `Siguiente sobre en ${tiempo}s`;
-      if (tiempo <= 0) {
+      tiempoRestante--;
+      timerDiv.textContent = `Siguiente sobre en ${tiempoRestante}s`;
+
+      if (tiempoRestante <= 0) {
         clearInterval(intervalo);
         abrirBtn.disabled = false;
         cooldown = false;
@@ -186,5 +206,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   abrirBtn.addEventListener("click", abrirSobre);
+
+  precargarImagenes();
   renderAlbum();
+  iniciarCooldown(); // ← Al cargar la página, checa si hay cooldown activo
 });
