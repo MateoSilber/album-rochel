@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const leyendasNombres = ["Puachi", "Mile", "Chiara", "Adri", "Cande", "Maia", "Guido", "ThiagoR"];
   const grupoFotosNombres = ["FotoGrupo1", "FotoGrupo2", "FotoGrupo3", "FotoGrupo4", "FotoGrupo5"];
 
- const totalFiguritas = [];
+const totalFiguritas = [];
   let idCounter = 1;
 
   function crearFiguritas(nombres, tipo) {
@@ -21,11 +21,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  crearFiguritas(janijimNombres, "janij");
-  crearFiguritas(madrijimNombres, "madrij");
-  crearFiguritas(mejanNombres, "mejan");
-  crearFiguritas(leyendasNombres, "leyenda");
-  crearFiguritas(grupoFotosNombres, "foto");
+  crearFiguritas(janijimNombres, "janijim");
+  crearFiguritas(madrijimNombres, "madrijim");
+  crearFiguritas(mejanNombres, "mejanjim");
+  crearFiguritas(leyendasNombres, "leyendas");
+  crearFiguritas(grupoFotosNombres, "fotos grupales");
 
   const albumDiv = document.getElementById("album");
   const sobreDiv = document.getElementById("sobre-abierto");
@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderAlbum() {
     albumDiv.innerHTML = "";
-    const categorias = ["janij", "madrij", "mejan", "leyenda", "foto"];
+    const categorias = ["janijim", "madrijim", "mejanjim", "leyendas", "fotos grupales"];
     categorias.forEach(cat => {
       const subtitulo = document.createElement("h3");
       subtitulo.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
@@ -119,10 +119,8 @@ document.addEventListener("DOMContentLoaded", () => {
     cooldown = true;
     abrirBtn.disabled = true;
 
-    // Guardar tiempo en localStorage
     const ahora = Date.now();
     localStorage.setItem("ultimoSobre", ahora);
-
     sobreImg.src = "fotos/sobre-abierto.png";
 
     setTimeout(() => {
@@ -162,30 +160,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
       localStorage.setItem("coleccionRochel", JSON.stringify(coleccion));
       renderAlbum();
-      iniciarCooldown(); // sigue el cooldown después de abrir
+      iniciarCooldown();
     }, 2000);
   }
 
   function iniciarCooldown() {
     const ahora = Date.now();
     const ultimo = localStorage.getItem("ultimoSobre");
-    let tiempoRestante = COOLDOWN_SEGUNDOS;
 
-    if (ultimo) {
-      const segundosPasados = Math.floor((ahora - parseInt(ultimo)) / 1000);
-      if (segundosPasados < COOLDOWN_SEGUNDOS) {
-        tiempoRestante = COOLDOWN_SEGUNDOS - segundosPasados;
-      } else {
-        cooldown = false;
-        abrirBtn.disabled = false;
-        timerDiv.textContent = "";
-        return;
-      }
+    // 💡 NUEVO: si es la primera vez, no hay cooldown
+    if (!ultimo) {
+      abrirBtn.disabled = false;
+      cooldown = false;
+      timerDiv.textContent = "";
+      return;
+    }
+
+    let tiempoRestante = COOLDOWN_SEGUNDOS;
+    const segundosPasados = Math.floor((ahora - parseInt(ultimo)) / 1000);
+
+    if (segundosPasados < COOLDOWN_SEGUNDOS) {
+      tiempoRestante = COOLDOWN_SEGUNDOS - segundosPasados;
+    } else {
+      abrirBtn.disabled = false;
+      cooldown = false;
+      timerDiv.textContent = "";
+      return;
     }
 
     abrirBtn.disabled = true;
     cooldown = true;
-
     timerDiv.textContent = `Siguiente sobre en ${tiempoRestante}s`;
 
     const intervalo = setInterval(() => {
@@ -209,5 +213,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
   precargarImagenes();
   renderAlbum();
-  iniciarCooldown(); // ← Al cargar la página, checa si hay cooldown activo
+  iniciarCooldown();
 });
