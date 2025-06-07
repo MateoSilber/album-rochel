@@ -8,7 +8,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const madrijimNombres = ["IaraF", "Diego", "Rossman", "Vicky"];
   const mejanNombres = ["Igal", "IaraN"];
-  const leyendasNombres = ["Puachi", "Mile", "Chiara", "Adri", "Cande", "Maia", "Guido", "ThiagoR"];
+const leyendasNombres = [
+  "Puachi", "Mile", "Chiara", "Adri", "Cande", "Maia", "Guido", "ThiagoR",
+  "Wanda", "Berstein", "Zifre", "Mora", "Cacha", "Chocho", "Marto",
+  "Batata", "AgusC", "SofiS"
+];
+
   const grupoFotosNombres = ["FotoGrupo1", "FotoGrupo2", "FotoGrupo3", "FotoGrupo4", "FotoGrupo5"];
 
   const totalFiguritas = [];
