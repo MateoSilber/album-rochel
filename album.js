@@ -1,17 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const janijimNombres = [
-    "Alex", "Khanis", "Milo", "Yoni", "Aby", "Alma", "Cata", "Dan", "DaniK", "Ivo",
-    "Jaz", "Juli", "Lolo", "Mateo", "Nacho", "Paula", "Ramiro", "Schniper", "Yair",
-    "Siano", "Sophie", "Tiago", "Wais", "Toto", "Uri", "Widder", "Wolko", "Benja",
-    "DaniM", "Emma", "Espe", "Maayan", "Sharon", "SofiaK", "Tali", "Ari"
-  ];
-
+  const janijimNombres = ["Alex", "Khanis", "Milo", "Yoni", "Aby", "Alma", "Cata", "Dan", "DaniK", "Ivo", "Jaz", "Juli", "Lolo", "Mateo", "Nacho", "Paula", "Ramiro", "Schniper", "Yair", "Siano", "Sophie", "Tiago", "Wais", "Toto", "Uri", "Widder", "Wolko", "Benja", "DaniM", "Emma", "Espe", "Maayan", "Sharon", "SofiaK", "Tali", "Ari"];
   const madrijimNombres = ["IaraF", "Diego", "Rossman", "Vicky"];
   const mejanNombres = ["Igal", "IaraN"];
   const leyendasNombres = ["Puachi", "Mile", "Chiara", "Adri", "Cande", "Maia", "Guido", "ThiagoR"];
   const grupoFotosNombres = ["FotoGrupo1", "FotoGrupo2", "FotoGrupo3", "FotoGrupo4", "FotoGrupo5"];
 
-const totalFiguritas = [];
+  const totalFiguritas = [];
   let idCounter = 1;
 
   function crearFiguritas(nombres, tipo) {
@@ -38,33 +32,30 @@ const totalFiguritas = [];
   const cerrarZoom = document.getElementById("cerrar-zoom");
 
   let coleccion = JSON.parse(localStorage.getItem("coleccionRochel")) || [];
-  let imagenesDisponibles = [];
   let cooldown = false;
   const COOLDOWN_SEGUNDOS = 60;
 
-  function precargarImagenes() {
-    const nombres = totalFiguritas.map(f => f.nombre.replace(/\s|\./g, ''));
-    const extensiones = ['png', 'jpg', 'jpeg'];
-    nombres.forEach(nombre => {
-      extensiones.forEach(ext => {
-        const ruta = `fotos/${nombre}.${ext}`;
-        const img = new Image();
-        img.src = ruta;
-        img.onload = () => {
-          if (!imagenesDisponibles.includes(ruta)) imagenesDisponibles.push(ruta);
-        };
-      });
-    });
-    imagenesDisponibles.push('fotos/fallback.png');
-  }
+  function cargarImagen(nombre, callback) {
+    const extensiones = ["png", "jpg", "jpeg"];
+    let index = 0;
 
-  function encontrarImagen(nombreBase) {
-    const extensiones = ['png', 'jpg', 'jpeg'];
-    for (let ext of extensiones) {
-      const ruta = `fotos/${nombreBase}.${ext}`;
-      if (imagenesDisponibles.includes(ruta)) return ruta;
+    function intentarCargar() {
+      if (index >= extensiones.length) {
+        callback("fotos/fallback.png");
+        return;
+      }
+
+      const intento = `fotos/${nombre}.${extensiones[index]}`;
+      const img = new Image();
+      img.onload = () => callback(intento);
+      img.onerror = () => {
+        index++;
+        intentarCargar();
+      };
+      img.src = intento;
     }
-    return 'fotos/fallback.png';
+
+    intentarCargar();
   }
 
   function renderAlbum() {
@@ -73,33 +64,34 @@ const totalFiguritas = [];
     categorias.forEach(cat => {
       const subtitulo = document.createElement("h3");
       subtitulo.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
-      albumDiv.appendChild(subtitulo);
+      const seccion = document.createElement("div");
+      seccion.className = "categoria";
+      seccion.appendChild(subtitulo);
 
       const contenedor = document.createElement("div");
       contenedor.className = "categoria-grid";
 
       totalFiguritas.filter(f => f.tipo === cat).forEach(fig => {
-        const pegada = coleccion.includes(fig.id);
         const div = document.createElement("div");
-        div.className = `figurita ${pegada ? "" : "faltante"}`;
+        div.className = `figurita ${fig.tipo}`;
 
-        if (pegada) {
+        if (coleccion.includes(fig.id)) {
           const nombreBase = fig.nombre.replace(/\s|\./g, '');
-          const imgSrc = encontrarImagen(nombreBase);
-
-          div.innerHTML = `
-            <img src="${imgSrc}" alt="${fig.nombre}">
-            <p>${fig.nombre}</p>
-            <small class="tipo ${fig.tipo}">${fig.tipo}</small>
-            <small class="numero">${fig.numero}</small>
-          `;
-
-          div.addEventListener("click", () => {
-            zoomImg.src = imgSrc;
-            zoomNombre.textContent = fig.nombre;
-            zoomView.classList.remove("hidden");
+          cargarImagen(nombreBase, (imgSrc) => {
+            div.innerHTML = `
+              <img src="${imgSrc}" alt="${fig.nombre}">
+              <p>${fig.nombre}</p>
+              <small class="tipo">${fig.tipo}</small>
+              <small class="numero">${fig.numero}</small>
+            `;
+            div.addEventListener("click", () => {
+              zoomImg.src = imgSrc;
+              zoomNombre.textContent = fig.nombre;
+              zoomView.classList.remove("hidden");
+            });
           });
         } else {
+          div.classList.add("faltante");
           div.innerHTML = `
             <div class="placeholder"></div>
             <p>?</p>
@@ -110,7 +102,8 @@ const totalFiguritas = [];
         contenedor.appendChild(div);
       });
 
-      albumDiv.appendChild(contenedor);
+      seccion.appendChild(contenedor);
+      albumDiv.appendChild(seccion);
     });
   }
 
@@ -119,43 +112,37 @@ const totalFiguritas = [];
     cooldown = true;
     abrirBtn.disabled = true;
 
-    const ahora = Date.now();
-    localStorage.setItem("ultimoSobre", ahora);
+    localStorage.setItem("ultimoSobre", Date.now());
     sobreImg.src = "fotos/sobre-abierto.png";
 
     setTimeout(() => {
       sobreImg.src = "fotos/sobre-cerrado.png";
 
-      const nuevas = [];
-      for (let i = 0; i < 5; i++) {
-        const rand = totalFiguritas[Math.floor(Math.random() * totalFiguritas.length)];
-        nuevas.push(rand);
-      }
-
+      const nuevas = Array.from({ length: 5 }, () => totalFiguritas[Math.floor(Math.random() * totalFiguritas.length)]);
       sobreDiv.innerHTML = "";
+
       nuevas.forEach(fig => {
-        const mini = document.createElement("div");
-        mini.className = "figurita";
-        mini.style.transform = "scale(0.5) rotate(-10deg)";
+        const div = document.createElement("div");
+        div.className = `figurita ${fig.tipo}`;
+        div.style.transform = "scale(0.5) rotate(-10deg)";
+
         const nombreBase = fig.nombre.replace(/\s|\./g, '');
-        const imgSrc = encontrarImagen(nombreBase);
+        cargarImagen(nombreBase, (imgSrc) => {
+          div.innerHTML = `
+            <img src="${imgSrc}" alt="${fig.nombre}">
+            <p>${fig.nombre}</p>
+            <small class="tipo">${fig.tipo}</small>
+            <small class="numero">${fig.numero}</small>
+          `;
+        });
 
-        mini.innerHTML = `
-          <img src="${imgSrc}" alt="${fig.nombre}">
-          <p>${fig.nombre}</p>
-          <small class="tipo ${fig.tipo}">${fig.tipo}</small>
-          <small class="numero">${fig.numero}</small>
-        `;
-        sobreDiv.appendChild(mini);
-
+        sobreDiv.appendChild(div);
         setTimeout(() => {
-          mini.style.transition = "transform 0.5s ease";
-          mini.style.transform = "scale(1) rotate(0deg)";
+          div.style.transition = "transform 0.5s ease";
+          div.style.transform = "scale(1) rotate(0deg)";
         }, 100);
 
-        if (!coleccion.includes(fig.id)) {
-          coleccion.push(fig.id);
-        }
+        if (!coleccion.includes(fig.id)) coleccion.push(fig.id);
       });
 
       localStorage.setItem("coleccionRochel", JSON.stringify(coleccion));
@@ -166,22 +153,16 @@ const totalFiguritas = [];
 
   function iniciarCooldown() {
     const ahora = Date.now();
-    const ultimo = localStorage.getItem("ultimoSobre");
-
-    // 💡 NUEVO: si es la primera vez, no hay cooldown
-    if (!ultimo) {
+    const ultimo = parseInt(localStorage.getItem("ultimoSobre"));
+    if (!ultimo || isNaN(ultimo)) {
       abrirBtn.disabled = false;
       cooldown = false;
       timerDiv.textContent = "";
       return;
     }
 
-    let tiempoRestante = COOLDOWN_SEGUNDOS;
-    const segundosPasados = Math.floor((ahora - parseInt(ultimo)) / 1000);
-
-    if (segundosPasados < COOLDOWN_SEGUNDOS) {
-      tiempoRestante = COOLDOWN_SEGUNDOS - segundosPasados;
-    } else {
+    let restante = COOLDOWN_SEGUNDOS - Math.floor((ahora - ultimo) / 1000);
+    if (restante <= 0) {
       abrirBtn.disabled = false;
       cooldown = false;
       timerDiv.textContent = "";
@@ -190,14 +171,13 @@ const totalFiguritas = [];
 
     abrirBtn.disabled = true;
     cooldown = true;
-    timerDiv.textContent = `Siguiente sobre en ${tiempoRestante}s`;
+    timerDiv.textContent = `Siguiente sobre en ${restante}s`;
 
-    const intervalo = setInterval(() => {
-      tiempoRestante--;
-      timerDiv.textContent = `Siguiente sobre en ${tiempoRestante}s`;
-
-      if (tiempoRestante <= 0) {
-        clearInterval(intervalo);
+    const interval = setInterval(() => {
+      restante--;
+      timerDiv.textContent = `Siguiente sobre en ${restante}s`;
+      if (restante <= 0) {
+        clearInterval(interval);
         abrirBtn.disabled = false;
         cooldown = false;
         timerDiv.textContent = "";
@@ -205,13 +185,9 @@ const totalFiguritas = [];
     }, 1000);
   }
 
-  cerrarZoom.addEventListener("click", () => {
-    zoomView.classList.add("hidden");
-  });
-
+  cerrarZoom.addEventListener("click", () => zoomView.classList.add("hidden"));
   abrirBtn.addEventListener("click", abrirSobre);
 
-  precargarImagenes();
   renderAlbum();
   iniciarCooldown();
 });
