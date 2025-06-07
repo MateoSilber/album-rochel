@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderAlbum() {
     albumDiv.innerHTML = "";
 
-    const categorias = ["janij", "madrij", "mejan", "leyenda", "foto"];
+    const categorias = ["Janijim", "Madrijim", "Mejanjim", "leyendas", "fotos grupales"];
 
     categorias.forEach(cat => {
       const subtitulo = document.createElement("h3");
