@@ -1,5 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const janijimNombres = ["Alex", "Khanis", "Milo", "Yoni", "Aby", "Alma", "Cata", "Dan", "DaniK", "Ivo", "Jaz", "Juli", "Lolo", "Mateo", "Nacho", "Paula", "Ramiro", "Schniper", "Yair", "Siano", "Sophie", "Tiago", "Wais", "Toto", "Uri", "Widder", "Wolko", "Benja", "DaniM", "Emma", "Espe", "Maayan", "Sharon", "SofiaK", "Tali", "Ari"];
+  const janijimNombres = [
+    "Alex", "Khanis", "Milo", "Yoni", "Aby", "Alma", "Cata", "Dan", "DaniK", "Ivo",
+    "Jaz", "Juli", "Lolo", "Mateo", "Nacho", "Paula", "Ramiro", "Schniper", "Yair",
+    "Siano", "Sophie", "Tiago", "Wais", "Toto", "Uri", "Widder", "Wolko", "Benja",
+    "DaniM", "Emma", "Espe", "Maayan", "Sharon", "SofiaK", "Tali", "Ari"
+  ];
+
   const madrijimNombres = ["IaraF", "Diego", "Rossman", "Vicky"];
   const mejanNombres = ["Igal", "IaraN"];
   const leyendasNombres = ["Puachi", "Mile", "Chiara", "Adri", "Cande", "Maia", "Guido", "ThiagoR"];
@@ -35,63 +41,75 @@ document.addEventListener("DOMContentLoaded", () => {
   let cooldown = false;
   const COOLDOWN_SEGUNDOS = 60;
 
-  function cargarImagen(nombre, callback) {
-    const extensiones = ["png", "jpg", "jpeg"];
-    let index = 0;
+  function obtenerRutaImagen(nombreBase) {
+    return `fotos/${nombreBase}.png`; // Siempre .png para arrancar
+  }
 
-    function intentarCargar() {
-      if (index >= extensiones.length) {
-        callback("fotos/fallback.png");
-        return;
+  function crearImgConMultiExtensiones(nombreBase, alt) {
+    // Crea el img con el atributo onerror para probar jpg, jpeg y fallback
+    const img = document.createElement("img");
+    img.src = obtenerRutaImagen(nombreBase);
+    img.alt = alt;
+    img.onerror = function () {
+      if (!this._intentadoJpg) {
+        this._intentadoJpg = true;
+        this.src = this.src.replace('.png', '.jpg');
+      } else if (!this._intentadoJpeg) {
+        this._intentadoJpeg = true;
+        this.src = this.src.replace('.jpg', '.jpeg');
+      } else {
+        this.src = 'fotos/fallback.png';
       }
-
-      const intento = `fotos/${nombre}.${extensiones[index]}`;
-      const img = new Image();
-      img.onload = () => callback(intento);
-      img.onerror = () => {
-        index++;
-        intentarCargar();
-      };
-      img.src = intento;
-    }
-
-    intentarCargar();
+    };
+    return img;
   }
 
   function renderAlbum() {
     albumDiv.innerHTML = "";
     const categorias = ["janijim", "madrijim", "mejanjim", "leyendas", "fotos grupales"];
     categorias.forEach(cat => {
+      // Contar figuritas faltantes
+      const figuritasCategoria = totalFiguritas.filter(f => f.tipo === cat);
+      const faltantes = figuritasCategoria.filter(f => !coleccion.includes(f.id)).length;
+
       const subtitulo = document.createElement("h3");
-      subtitulo.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
-      const seccion = document.createElement("div");
-      seccion.className = "categoria";
-      seccion.appendChild(subtitulo);
+      subtitulo.textContent = `${cat.charAt(0).toUpperCase() + cat.slice(1)} (Faltantes: ${faltantes})`;
+      albumDiv.appendChild(subtitulo);
 
       const contenedor = document.createElement("div");
       contenedor.className = "categoria-grid";
 
-      totalFiguritas.filter(f => f.tipo === cat).forEach(fig => {
+      figuritasCategoria.forEach(fig => {
+        const pegada = coleccion.includes(fig.id);
         const div = document.createElement("div");
-        div.className = `figurita ${fig.tipo}`;
+        div.className = `figurita ${pegada ? "" : "faltante"}`;
 
-        if (coleccion.includes(fig.id)) {
+        if (pegada) {
           const nombreBase = fig.nombre.replace(/\s|\./g, '');
-          cargarImagen(nombreBase, (imgSrc) => {
-            div.innerHTML = `
-              <img src="${imgSrc}" alt="${fig.nombre}">
-              <p>${fig.nombre}</p>
-              <small class="tipo">${fig.tipo}</small>
-              <small class="numero">${fig.numero}</small>
-            `;
-            div.addEventListener("click", () => {
-              zoomImg.src = imgSrc;
-              zoomNombre.textContent = fig.nombre;
-              zoomView.classList.remove("hidden");
-            });
+          const img = crearImgConMultiExtensiones(nombreBase, fig.nombre);
+
+          const pNombre = document.createElement("p");
+          pNombre.textContent = fig.nombre;
+
+          const smallTipo = document.createElement("small");
+          smallTipo.className = `tipo ${fig.tipo}`;
+          smallTipo.textContent = fig.tipo;
+
+          const smallNum = document.createElement("small");
+          smallNum.className = "numero";
+          smallNum.textContent = fig.numero;
+
+          div.appendChild(img);
+          div.appendChild(pNombre);
+          div.appendChild(smallTipo);
+          div.appendChild(smallNum);
+
+          div.addEventListener("click", () => {
+            zoomImg.src = img.src;
+            zoomNombre.textContent = fig.nombre;
+            zoomView.classList.remove("hidden");
           });
         } else {
-          div.classList.add("faltante");
           div.innerHTML = `
             <div class="placeholder"></div>
             <p>?</p>
@@ -102,8 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
         contenedor.appendChild(div);
       });
 
-      seccion.appendChild(contenedor);
-      albumDiv.appendChild(seccion);
+      albumDiv.appendChild(contenedor);
     });
   }
 
@@ -112,37 +129,53 @@ document.addEventListener("DOMContentLoaded", () => {
     cooldown = true;
     abrirBtn.disabled = true;
 
-    localStorage.setItem("ultimoSobre", Date.now());
+    const ahora = Date.now();
+    localStorage.setItem("ultimoSobre", ahora);
     sobreImg.src = "fotos/sobre-abierto.png";
 
     setTimeout(() => {
       sobreImg.src = "fotos/sobre-cerrado.png";
 
-      const nuevas = Array.from({ length: 5 }, () => totalFiguritas[Math.floor(Math.random() * totalFiguritas.length)]);
+      const nuevas = [];
+      for (let i = 0; i < 5; i++) {
+        const rand = totalFiguritas[Math.floor(Math.random() * totalFiguritas.length)];
+        nuevas.push(rand);
+      }
+
       sobreDiv.innerHTML = "";
-
       nuevas.forEach(fig => {
-        const div = document.createElement("div");
-        div.className = `figurita ${fig.tipo}`;
-        div.style.transform = "scale(0.5) rotate(-10deg)";
-
+        const mini = document.createElement("div");
+        mini.className = "figurita";
+        mini.style.transform = "scale(0.5) rotate(-10deg)";
         const nombreBase = fig.nombre.replace(/\s|\./g, '');
-        cargarImagen(nombreBase, (imgSrc) => {
-          div.innerHTML = `
-            <img src="${imgSrc}" alt="${fig.nombre}">
-            <p>${fig.nombre}</p>
-            <small class="tipo">${fig.tipo}</small>
-            <small class="numero">${fig.numero}</small>
-          `;
-        });
+        const img = crearImgConMultiExtensiones(nombreBase, fig.nombre);
 
-        sobreDiv.appendChild(div);
+        const pNombre = document.createElement("p");
+        pNombre.textContent = fig.nombre;
+
+        const smallTipo = document.createElement("small");
+        smallTipo.className = `tipo ${fig.tipo}`;
+        smallTipo.textContent = fig.tipo;
+
+        const smallNum = document.createElement("small");
+        smallNum.className = "numero";
+        smallNum.textContent = fig.numero;
+
+        mini.appendChild(img);
+        mini.appendChild(pNombre);
+        mini.appendChild(smallTipo);
+        mini.appendChild(smallNum);
+
+        sobreDiv.appendChild(mini);
+
         setTimeout(() => {
-          div.style.transition = "transform 0.5s ease";
-          div.style.transform = "scale(1) rotate(0deg)";
+          mini.style.transition = "transform 0.5s ease";
+          mini.style.transform = "scale(1) rotate(0deg)";
         }, 100);
 
-        if (!coleccion.includes(fig.id)) coleccion.push(fig.id);
+        if (!coleccion.includes(fig.id)) {
+          coleccion.push(fig.id);
+        }
       });
 
       localStorage.setItem("coleccionRochel", JSON.stringify(coleccion));
@@ -153,16 +186,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function iniciarCooldown() {
     const ahora = Date.now();
-    const ultimo = parseInt(localStorage.getItem("ultimoSobre"));
-    if (!ultimo || isNaN(ultimo)) {
+    const ultimo = localStorage.getItem("ultimoSobre");
+
+    if (!ultimo) {
       abrirBtn.disabled = false;
       cooldown = false;
       timerDiv.textContent = "";
       return;
     }
 
-    let restante = COOLDOWN_SEGUNDOS - Math.floor((ahora - ultimo) / 1000);
-    if (restante <= 0) {
+    let tiempoRestante = COOLDOWN_SEGUNDOS;
+    const segundosPasados = Math.floor((ahora - parseInt(ultimo)) / 1000);
+
+    if (segundosPasados < COOLDOWN_SEGUNDOS) {
+      tiempoRestante = COOLDOWN_SEGUNDOS - segundosPasados;
+    } else {
       abrirBtn.disabled = false;
       cooldown = false;
       timerDiv.textContent = "";
@@ -171,22 +209,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     abrirBtn.disabled = true;
     cooldown = true;
-    timerDiv.textContent = `Siguiente sobre en ${restante}s`;
+    timerDiv.textContent = `Puedes abrir otro sobre en: ${tiempoRestante} segundos`;
 
-    const interval = setInterval(() => {
-      restante--;
-      timerDiv.textContent = `Siguiente sobre en ${restante}s`;
-      if (restante <= 0) {
-        clearInterval(interval);
+    const intervalo = setInterval(() => {
+      tiempoRestante--;
+      if (tiempoRestante <= 0) {
+        clearInterval(intervalo);
         abrirBtn.disabled = false;
         cooldown = false;
         timerDiv.textContent = "";
+      } else {
+        timerDiv.textContent = `Puedes abrir otro sobre en: ${tiempoRestante} segundos`;
       }
     }, 1000);
   }
 
-  cerrarZoom.addEventListener("click", () => zoomView.classList.add("hidden"));
   abrirBtn.addEventListener("click", abrirSobre);
+  cerrarZoom.addEventListener("click", () => {
+    zoomView.classList.add("hidden");
+  });
 
   renderAlbum();
   iniciarCooldown();
