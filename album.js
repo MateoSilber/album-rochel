@@ -10,7 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const mejanNombres = ["Igal", "IaraN"];
   const leyendasNombres = ["Puachi", "Mile", "Chiara", "Adri", "Cande", "Maia", "Guido", "ThiagoR"];
 
-  // Fotos de grupo con nombres compatibles con archivos locales
   const grupoFotosNombres = ["FotoGrupo1", "FotoGrupo2", "FotoGrupo3", "FotoGrupo4", "FotoGrupo5"];
 
   const totalFiguritas = [];
@@ -28,11 +27,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  crearFiguritas(janijimNombres, "janij");
-  crearFiguritas(madrijimNombres, "madrij");
-  crearFiguritas(mejanNombres, "mejan");
-  crearFiguritas(leyendasNombres, "leyenda");
-  crearFiguritas(grupoFotosNombres, "foto");
+  crearFiguritas(janijimNombres, "Janijim");
+  crearFiguritas(madrijimNombres, "Madrijim");
+  crearFiguritas(mejanNombres, "Mejanjim");
+  crearFiguritas(leyendasNombres, "leyendas");
+  crearFiguritas(grupoFotosNombres, "fotos grupales");
 
   // Manejo de imágenes locales
   function encontrarImagen(nombreBase) {
@@ -76,6 +75,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const timerDiv = document.getElementById("timer");
   const imgSobreBloqueado = document.getElementById("sobre-bloqueado-img");
 
+  const modal = document.getElementById("modal-figurita");
+  const modalImg = document.getElementById("modal-img");
+  const modalNombre = document.getElementById("modal-nombre");
+  const modalTipo = document.getElementById("modal-tipo");
+  const modalNumero = document.getElementById("modal-numero");
+  const cerrarModalBtn = document.getElementById("cerrar-modal");
+
   let coleccion = JSON.parse(localStorage.getItem("coleccionRochel")) || [];
   let cooldown = false;
 
@@ -112,12 +118,17 @@ document.addEventListener("DOMContentLoaded", () => {
             <small class="tipo ${fig.tipo}">${fig.tipo}</small>
             <small class="numero">${fig.numero}</small>
           `;
+
+          // Agregar evento click para abrir modal en figuritas pegadas
+          div.style.cursor = "pointer";
+          div.addEventListener("click", () => abrirModal(fig, imgSrc));
         } else {
           div.innerHTML = `
             <div class="placeholder"></div>
             <p>?</p>
             <small class="numero">${fig.numero}</small>
           `;
+          div.style.cursor = "default";
         }
 
         contenedor.appendChild(div);
@@ -127,6 +138,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function abrirModal(fig, imgSrc) {
+    modal.style.display = "flex";
+    modalImg.src = imgSrc;
+    modalImg.alt = fig.nombre;
+    modalNombre.textContent = fig.nombre;
+    modalTipo.textContent = `Tipo: ${fig.tipo}`;
+    modalNumero.textContent = `Número: ${fig.numero}`;
+  }
+
+  cerrarModalBtn.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  // Cerrar modal si clickeas fuera del contenido
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.style.display = "none";
+    }
+  });
+
   function abrirSobre() {
     if (cooldown) return;
     cooldown = true;
@@ -134,7 +165,6 @@ document.addEventListener("DOMContentLoaded", () => {
     abrirBtn.textContent = "Abriendo...";
 
     const nuevas = [];
-    // Elegimos 5 figuritas al azar, sin importar repetidas ni si ya las tienes
     for (let i = 0; i < 5; i++) {
       const rand = totalFiguritas[Math.floor(Math.random() * totalFiguritas.length)];
       nuevas.push(rand);
@@ -172,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function iniciarCooldown() {
-    let tiempo = 60; // 60 segundos = 1 minuto
+    let tiempo = 60; // 1 minuto
     timerDiv.style.display = "block";
     imgSobreBloqueado.style.display = "inline-block";
     timerDiv.textContent = `Siguiente sobre en ${tiempo}s`;
