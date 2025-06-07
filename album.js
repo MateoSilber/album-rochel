@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const madrijimNombres = ["IaraF", "Diego", "Rossman", "Vicky"];
   const mejanNombres = ["Igal", "IaraN"];
   const leyendasNombres = ["Puachi", "Mile", "Chiara", "Adri", "Cande", "Maia", "Guido", "ThiagoR"];
-
   const grupoFotosNombres = ["FotoGrupo1", "FotoGrupo2", "FotoGrupo3", "FotoGrupo4", "FotoGrupo5"];
 
   const totalFiguritas = [];
@@ -17,23 +16,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function crearFiguritas(nombres, tipo) {
     nombres.forEach(nombre => {
-      totalFiguritas.push({
-        id: idCounter,
-        numero: idCounter,
-        nombre,
-        tipo
-      });
+      totalFiguritas.push({ id: idCounter, numero: idCounter, nombre, tipo });
       idCounter++;
     });
   }
 
-  crearFiguritas(janijimNombres, "Janijim");
-  crearFiguritas(madrijimNombres, "Madrijim");
-  crearFiguritas(mejanNombres, "Mejanjim");
-  crearFiguritas(leyendasNombres, "leyendas");
-  crearFiguritas(grupoFotosNombres, "fotos grupales");
+  crearFiguritas(janijimNombres, "janij");
+  crearFiguritas(madrijimNombres, "madrij");
+  crearFiguritas(mejanNombres, "mejan");
+  crearFiguritas(leyendasNombres, "leyenda");
+  crearFiguritas(grupoFotosNombres, "foto");
 
-  // Manejo de imágenes locales
+  let imagenesDisponibles = [];
+
+  function precargarImagenes() {
+    const nombres = totalFiguritas.map(f => f.nombre.replace(/\s|\./g, ''));
+    const extensiones = ['png', 'jpg', 'jpeg'];
+    nombres.forEach(nombre => {
+      extensiones.forEach(ext => {
+        const ruta = `fotos/${nombre}.${ext}`;
+        const img = new Image();
+        img.src = ruta;
+        img.onload = () => {
+          if (!imagenesDisponibles.includes(ruta)) imagenesDisponibles.push(ruta);
+        };
+      });
+    });
+    imagenesDisponibles.push('fotos/fallback.png');
+  }
+
   function encontrarImagen(nombreBase) {
     const extensiones = ['png', 'jpg', 'jpeg'];
     for (let ext of extensiones) {
@@ -43,52 +54,24 @@ document.addEventListener("DOMContentLoaded", () => {
     return 'fotos/fallback.png';
   }
 
-  let imagenesDisponibles = [];
-
-  function precargarImagenes() {
-    const nombres = totalFiguritas.map(f => f.nombre.replace(/\s|\./g, ''));
-    const extensiones = ['png', 'jpg', 'jpeg'];
-
-    nombres.forEach(nombre => {
-      extensiones.forEach(ext => {
-        const ruta = `fotos/${nombre}.${ext}`;
-        const img = new Image();
-        img.src = ruta;
-        img.onload = () => {
-          if (!imagenesDisponibles.includes(ruta)) {
-            imagenesDisponibles.push(ruta);
-          }
-        };
-      });
-    });
-
-    // Agrega el fallback también
-    imagenesDisponibles.push('fotos/fallback.png');
-    imagenesDisponibles.push('fotos/fallback.jpg');
-  }
-
   precargarImagenes();
 
   const albumDiv = document.getElementById("album");
   const sobreDiv = document.getElementById("sobre-abierto");
   const abrirBtn = document.getElementById("abrir-sobre");
   const timerDiv = document.getElementById("timer");
-  const imgSobreBloqueado = document.getElementById("sobre-bloqueado-img");
-
-  const modal = document.getElementById("modal-figurita");
-  const modalImg = document.getElementById("modal-img");
-  const modalNombre = document.getElementById("modal-nombre");
-  const modalTipo = document.getElementById("modal-tipo");
-  const modalNumero = document.getElementById("modal-numero");
-  const cerrarModalBtn = document.getElementById("cerrar-modal");
+  const sobreImg = document.getElementById("sobre-img");
+  const zoomView = document.getElementById("zoom-view");
+  const zoomImg = document.getElementById("zoom-img");
+  const zoomNombre = document.getElementById("zoom-nombre");
+  const cerrarZoom = document.getElementById("cerrar-zoom");
 
   let coleccion = JSON.parse(localStorage.getItem("coleccionRochel")) || [];
   let cooldown = false;
 
   function renderAlbum() {
     albumDiv.innerHTML = "";
-
-    const categorias = ["Janijim", "Madrijim", "Mejanjim", "leyendas", "fotos grupales"];
+    const categorias = ["janij", "madrij", "mejan", "leyenda", "foto"];
 
     categorias.forEach(cat => {
       const subtitulo = document.createElement("h3");
@@ -96,22 +79,17 @@ document.addEventListener("DOMContentLoaded", () => {
       albumDiv.appendChild(subtitulo);
 
       const contenedor = document.createElement("div");
-      contenedor.style.display = "flex";
-      contenedor.style.flexWrap = "wrap";
-      contenedor.style.justifyContent = "center";
-      contenedor.style.gap = "10px";
+      contenedor.className = "categoria-grid";
 
-      const figs = totalFiguritas.filter(f => f.tipo === cat);
-
-      figs.forEach(fig => {
+      totalFiguritas.filter(f => f.tipo === cat).forEach(fig => {
         const pegada = coleccion.includes(fig.id);
         const div = document.createElement("div");
         div.className = `figurita ${pegada ? "" : "faltante"}`;
 
-        const nombreBase = fig.nombre.replace(/\s|\./g, '');
-        const imgSrc = encontrarImagen(nombreBase);
-
         if (pegada) {
+          const nombreBase = fig.nombre.replace(/\s|\./g, '');
+          const imgSrc = encontrarImagen(nombreBase);
+
           div.innerHTML = `
             <img src="${imgSrc}" alt="${fig.nombre}">
             <p>${fig.nombre}</p>
@@ -119,16 +97,17 @@ document.addEventListener("DOMContentLoaded", () => {
             <small class="numero">${fig.numero}</small>
           `;
 
-          // Agregar evento click para abrir modal en figuritas pegadas
-          div.style.cursor = "pointer";
-          div.addEventListener("click", () => abrirModal(fig, imgSrc));
+          div.addEventListener("click", () => {
+            zoomImg.src = imgSrc;
+            zoomNombre.textContent = fig.nombre;
+            zoomView.classList.remove("hidden");
+          });
         } else {
           div.innerHTML = `
             <div class="placeholder"></div>
             <p>?</p>
             <small class="numero">${fig.numero}</small>
           `;
-          div.style.cursor = "default";
         }
 
         contenedor.appendChild(div);
@@ -138,73 +117,56 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function abrirModal(fig, imgSrc) {
-    modal.style.display = "flex";
-    modalImg.src = imgSrc;
-    modalImg.alt = fig.nombre;
-    modalNombre.textContent = fig.nombre;
-    modalTipo.textContent = `Tipo: ${fig.tipo}`;
-    modalNumero.textContent = `Número: ${fig.numero}`;
-  }
-
-  cerrarModalBtn.addEventListener("click", () => {
-    modal.style.display = "none";
-  });
-
-  // Cerrar modal si clickeas fuera del contenido
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) {
-      modal.style.display = "none";
-    }
-  });
-
   function abrirSobre() {
     if (cooldown) return;
     cooldown = true;
     abrirBtn.disabled = true;
-    abrirBtn.textContent = "Abriendo...";
 
-    const nuevas = [];
-    for (let i = 0; i < 5; i++) {
-      const rand = totalFiguritas[Math.floor(Math.random() * totalFiguritas.length)];
-      nuevas.push(rand);
-    }
+    sobreImg.src = "fotos/sobre-abierto.png";
 
-    sobreDiv.innerHTML = "";
-    nuevas.forEach(fig => {
-      const mini = document.createElement("div");
-      mini.className = "figurita";
-      mini.style.transform = "scale(0.5) rotate(-10deg)";
-      const nombreBase = fig.nombre.replace(/\s|\./g, '');
-      const imgSrc = encontrarImagen(nombreBase);
+    setTimeout(() => {
+      sobreImg.src = "fotos/sobre-cerrado.png";
 
-      mini.innerHTML = `
-        <img src="${imgSrc}" alt="${fig.nombre}">
-        <p>${fig.nombre}</p>
-        <small class="tipo ${fig.tipo}">${fig.tipo}</small>
-        <small class="numero">${fig.numero}</small>
-      `;
-      sobreDiv.appendChild(mini);
-
-      setTimeout(() => {
-        mini.style.transition = "transform 0.5s ease";
-        mini.style.transform = "scale(1) rotate(0deg)";
-      }, 100);
-
-      if (!coleccion.includes(fig.id)) {
-        coleccion.push(fig.id);
+      const nuevas = [];
+      for (let i = 0; i < 5; i++) {
+        const rand = totalFiguritas[Math.floor(Math.random() * totalFiguritas.length)];
+        nuevas.push(rand);
       }
-    });
 
-    localStorage.setItem("coleccionRochel", JSON.stringify(coleccion));
-    renderAlbum();
-    iniciarCooldown();
+      sobreDiv.innerHTML = "";
+      nuevas.forEach(fig => {
+        const mini = document.createElement("div");
+        mini.className = "figurita";
+        mini.style.transform = "scale(0.5) rotate(-10deg)";
+        const nombreBase = fig.nombre.replace(/\s|\./g, '');
+        const imgSrc = encontrarImagen(nombreBase);
+
+        mini.innerHTML = `
+          <img src="${imgSrc}" alt="${fig.nombre}">
+          <p>${fig.nombre}</p>
+          <small class="tipo ${fig.tipo}">${fig.tipo}</small>
+          <small class="numero">${fig.numero}</small>
+        `;
+        sobreDiv.appendChild(mini);
+
+        setTimeout(() => {
+          mini.style.transition = "transform 0.5s ease";
+          mini.style.transform = "scale(1) rotate(0deg)";
+        }, 100);
+
+        if (!coleccion.includes(fig.id)) {
+          coleccion.push(fig.id);
+        }
+      });
+
+      localStorage.setItem("coleccionRochel", JSON.stringify(coleccion));
+      renderAlbum();
+      iniciarCooldown();
+    }, 2000);
   }
 
   function iniciarCooldown() {
-    let tiempo = 60; // 1 minuto
-    timerDiv.style.display = "block";
-    imgSobreBloqueado.style.display = "inline-block";
+    let tiempo = 60;
     timerDiv.textContent = `Siguiente sobre en ${tiempo}s`;
 
     const intervalo = setInterval(() => {
@@ -213,13 +175,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if (tiempo <= 0) {
         clearInterval(intervalo);
         abrirBtn.disabled = false;
-        abrirBtn.textContent = "Abrir Sobre";
         cooldown = false;
-        timerDiv.style.display = "none";
-        imgSobreBloqueado.style.display = "none";
+        timerDiv.textContent = "";
       }
     }, 1000);
   }
+
+  cerrarZoom.addEventListener("click", () => {
+    zoomView.classList.add("hidden");
+  });
 
   abrirBtn.addEventListener("click", abrirSobre);
   renderAlbum();

@@ -2,28 +2,31 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Álbum Rochel</title>
   <link rel="stylesheet" href="album.css" />
 </head>
 <body>
   <h1>Álbum Rochel</h1>
+
   <div id="timer"></div>
-  <button id="abrir-sobre">Abrir Sobre</button>
-  <img id="sobre-bloqueado-img" src="https://cdn-icons-png.flaticon.com/512/3176/3176292.png" alt="Sobre bloqueado" style="display:none; width:60px" />
+
+  <div id="sobre-container">
+    <img id="sobre-img" src="fotos/sobre-cerrado.png" alt="Sobre" />
+    <button id="abrir-sobre">Abrir Sobre</button>
+  </div>
+
   <div id="sobre-abierto"></div>
 
   <h2>Mi Álbum</h2>
   <div id="album"></div>
 
-  <!-- Modal para figurita agrandada -->
-  <div id="modal-figurita" class="modal" style="display:none;">
-    <div class="modal-content">
-      <span id="cerrar-modal" class="close-button">&times;</span>
-      <img id="modal-img" src="" alt="Figurita agrandada" />
-      <p id="modal-nombre"></p>
-      <small id="modal-tipo"></small>
-      <small id="modal-numero"></small>
+  <!-- Vista ampliada -->
+  <div id="zoom-view" class="hidden">
+    <div class="zoom-content">
+      <button id="cerrar-zoom">X</button>
+      <img id="zoom-img" src="" alt="">
+      <p id="zoom-nombre"></p>
     </div>
   </div>
 

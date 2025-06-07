@@ -1,4 +1,4 @@
-body { 
+body {
   font-family: Arial, sans-serif;
   background: #7F00FF;
   color: #fff;
@@ -14,7 +14,19 @@ button {
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+#sobre-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#sobre-img {
+  width: 180px;
+  height: 240px;
+  object-fit: contain;
 }
 
 #sobre-abierto {
@@ -36,7 +48,7 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
-  cursor: default;
+  cursor: pointer;
 }
 
 .figurita img {
@@ -96,6 +108,11 @@ button {
   max-width: 900px;
 }
 
+.categoria h3 {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
 .categoria-grid {
   display: flex;
   flex-wrap: wrap;
@@ -105,92 +122,51 @@ button {
 
 #timer {
   font-size: 18px;
-  margin-bottom: 10px;
+  margin: 10px;
 }
 
-/* Modal styles */
-.modal {
+#zoom-view {
   position: fixed;
-  z-index: 9999;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  background-color: rgba(0,0,0,0.8);
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 999;
 }
 
-.modal-content {
-  background-color: #222;
-  padding: 20px;
-  border-radius: 12px;
-  text-align: center;
-  color: white;
-  max-width: 320px;
-  width: 90%;
+#zoom-view.hidden {
+  display: none;
+}
+
+.zoom-content {
   position: relative;
+  background-color: white;
+  padding: 20px;
+  border-radius: 20px;
+  text-align: center;
+  max-width: 90vw;
 }
 
-.modal-content img {
-  max-width: 100%;
-  height: auto;
+#zoom-img {
+  width: 30%;
+  height: 30%;
+  object-fit: cover;
   border-radius: 12px;
-  margin-bottom: 15px;
 }
 
-.close-button {
+#cerrar-zoom {
   position: absolute;
-  right: 15px;
   top: 10px;
-  font-size: 28px;
+  right: 10px;
+  background: red;
+  color: white;
   font-weight: bold;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
   cursor: pointer;
-  color: #fff;
-}
-
-/* Responsive para celulares */
-@media (max-width: 600px) {
-  body {
-    padding: 10px;
-  }
-
-  button {
-    width: 100%;
-    font-size: 18px;
-    padding: 15px 0;
-    border-radius: 8px;
-  }
-
-  #sobre-abierto {
-    gap: 5px;
-  }
-
-  .figurita {
-    width: 100px;
-    padding: 8px;
-  }
-
-  .figurita img {
-    width: 70px;
-    height: 70px;
-  }
-
-  .figurita .tipo {
-    font-size: 10px;
-  }
-
-  .figurita .numero {
-    font-size: 14px;
-  }
-
-  #album {
-    gap: 20px;
-  }
-
-  .categoria {
-    max-width: 100%;
-  }
 }
